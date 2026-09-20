@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "0.2.0",
+  "_changelog": "v0.2: Xoa h1 khoi heading (SEO), fix SSRF tren form.webhook_url -> webhook_id, them sort_by enum, them block video + embed, dinh nghia responsiveOverride schema chi tiet.",
+  "description": "Catalog dinh nghia toan bo block type dung trong Editor Engine va Renderer. Moi block type mo ta props hop le, kieu du lieu, gia tri mac dinh.",
+  "blockTypes": [
+    {
+      "type": "heading",
+      "label": "Tiêu đề",
+      "allowsChildren": false,
+      "_note": "h1 da bi xoa khoi enum (B5-SEO): chi 1 h1 duoc phep tren 1 trang, phai dat o Page level (title trong seo_meta), khong phai trong block.",
+      "props": {
+        "text": { "type": "string", "default": "Tiêu đề mới" },
+        "level": { "type": "string", "enum": ["h2", "h3", "h4"], "default": "h2" },
+        "align": { "type": "string", "enum": ["left", "center", "right"], "default": "left" }
+      }
+    },
+    {
+      "type": "text",
+      "label": "Đoạn văn bản",
+      "allowsChildren": false,
+      "props": {
+        "richtext": { "type": "string", "default": "" },
+        "align": { "type": "string", "enum": ["left", "center", "right"], "default": "left" }
+      }
+    },
+    {
+      "type": "image",
+      "label": "Hình ảnh",
+      "allowsChildren": false,
+      "props": {
+        "src": { "type": "string", "format": "uri", "default": "" },
+        "alt": { "type": "string", "default": "" },
+        "width": { "type": "string", "default": "100%" },
+        "rounded": { "type": "boolean", "default": false }
+      }
+    },
+    {
+      "type": "button",
+      "label": "Nút bấm",
+      "allowsChildren": false,
+      "props": {
+        "label": { "type": "string", "default": "Nhấn vào đây" },
+        "href": { "type": "string", "format": "uri", "default": "#" },
+        "style": { "type": "string", "enum": ["primary", "secondary", "outline"], "default": "primary" }
+      }
+    },
+    {
+      "type": "section",
+      "label": "Khối bố cục (section)",
+      "allowsChildren": true,
+      "props": {
+        "background": { "type": "string", "default": "#FFFFFF" },
+        "padding": { "type": "string", "default": "48px" },
+        "layout": { "type": "string", "enum": ["stack", "row", "grid"], "default": "stack" }
+      }
+    },
+    {
+      "type": "divider",
+      "label": "Đường phân cách",
+      "allowsChildren": false,
+      "props": {
+        "style": { "type": "string", "enum": ["solid", "dashed"], "default": "solid" }
+      }
+    },
+    {
+      "type": "collection_list",
+      "label": "Danh sách nội dung động (CMS Collection)",
+      "allowsChildren": false,
+      "description": "Block quan trong nhat de hien thi content_items dong — dung cho danh sach blog, san pham...",
+      "props": {
+        "content_type_id": { "type": "string", "format": "uuid" },
+        "limit": { "type": "integer", "default": 6, "minimum": 1, "maximum": 100 },
+        "sort_by": {
+          "type": "string",
+          "enum": ["created_at", "updated_at", "title"],
+          "default": "created_at",
+          "_note": "Enum co dinh de tranh SQL injection / sort theo field khong ton tai"
+        },
+        "sort_order": { "type": "string", "enum": ["desc", "asc"], "default": "desc" },
+        "layout": { "type": "string", "enum": ["grid", "list", "carousel"], "default": "grid" },
+        "item_template": {
+          "type": "object",
+          "description": "Mapping field cua content_type sang phan hien thi",
+          "properties": {
+            "title_field": { "type": "string" },
+            "image_field": { "type": "string" },
+            "excerpt_field": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "type": "form",
+      "label": "Biểu mẫu liên hệ",
+      "allowsChildren": false,
+      "_security": "SSRF fix (B5): webhook_url da bi xoa. Thay bang webhook_id tham chieu den bang webhooks (quan ly qua API rieng). Backend validate ID truoc khi forward.",
+      "props": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "input_type": { "type": "string", "enum": ["text", "email", "phone", "textarea"] },
+              "required": { "type": "boolean", "default": false }
+            }
+          },
+          "default": []
+        },
+        "submit_label": { "type": "string", "default": "Gửi" },
+        "webhook_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "ID tham chieu den bang 'webhooks' — backend lookup URL thuc te, khong expose URL cho frontend. Ngan SSRF."
+        },
+        "success_message": { "type": "string", "default": "Đã gửi thành công! Chúng tôi sẽ liên hệ sớm." }
+      }
+    },
+    {
+      "type": "video",
+      "label": "Video",
+      "allowsChildren": false,
+      "props": {
+        "src": { "type": "string", "format": "uri", "default": "", "description": "URL video tren CDN (MinIO media-public)" },
+        "poster": { "type": "string", "format": "uri", "default": "", "description": "Ảnh thumbnail" },
+        "autoplay": { "type": "boolean", "default": false },
+        "controls": { "type": "boolean", "default": true },
+        "loop": { "type": "boolean", "default": false },
+        "width": { "type": "string", "default": "100%" }
+      }
+    },
+    {
+      "type": "embed",
+      "label": "Nhúng nội dung ngoài (YouTube, Google Maps)",
+      "allowsChildren": false,
+      "_security": "Chi cho phep provider trong allowlist. Backend validate provider truoc khi render iframe.",
+      "props": {
+        "provider": {
+          "type": "string",
+          "enum": ["youtube", "google_maps", "facebook_video"],
+          "default": "youtube"
+        },
+        "embed_id": {
+          "type": "string",
+          "description": "YouTube video ID, Google Maps place_id, hoac Facebook video ID — KHONG phai full URL"
+        },
+        "height": { "type": "string", "default": "450px" },
+        "caption": { "type": "string", "default": "" }
+      }
+    }
+  ],
+  "responsiveOverride": {
+    "description": "Moi block co the override props rieng theo breakpoint. Luu tai blocks.props._responsive. Mobile-first: mobile la base, tablet/desktop override len.",
+    "breakpoints": ["mobile", "tablet", "desktop"],
+    "strategy": "mobile-first",
+    "schema": {
+      "_responsive": {
+        "type": "object",
+        "properties": {
+          "mobile": { "type": "object", "description": "Base (bat buoc neu dung responsive)" },
+          "tablet": { "type": "object", "description": "Override tren mobile khi >= 768px" },
+          "desktop": { "type": "object", "description": "Override tren tablet khi >= 1280px" }
+        }
+      }
+    },
+    "example": {
+      "type": "section",
+      "props": {
+        "padding": "48px",
+        "layout": "row",
+        "_responsive": {
+          "mobile": { "padding": "16px", "layout": "stack" },
+          "tablet": { "padding": "24px", "layout": "stack" },
+          "desktop": { "padding": "48px", "layout": "row" }
+        }
+      }
+    }
+  },
+  "validationRules": {
+    "heading_h1_uniqueness": {
+      "description": "h1 da bi xoa khoi block heading. H1 cua trang duoc lay tu seo_meta.title (dat o tang page). Validate khi publish: page phai co seo_meta.title khong rong.",
+      "enforcement": "backend — validate khi POST /versions/{id}/publish"
+    },
+    "block_circular_reference": {
+      "description": "blocks.parent_id khong duoc tao vong lap (A->B->A). Validate khi save page_version.",
+      "enforcement": "backend — DFS check truoc khi commit"
+    },
+    "form_webhook_id": {
+      "description": "webhook_id phai ton tai trong bang 'webhooks' cua cung site_id. Backend validate truoc khi luu.",
+      "enforcement": "backend — FK check + site isolation"
+    }
+  }
+}

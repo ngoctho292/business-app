@@ -1,0 +1,32 @@
+{
+  "name": "t-business-cms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nền tảng CMS kéo-thả Multi-tenant T-Business (VNPT)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces --if-present build",
+    "dev:backend": "npm run --workspace=apps/backend dev",
+    "dev:renderer": "npm run --workspace=apps/renderer dev",
+    "dev:editor": "npm run --workspace=apps/editor dev",
+    "generate:types": "npm run --workspace=packages/shared-types generate",
+    "db:generate": "npm run --workspace=apps/backend db:generate",
+    "db:migrate": "npm run --workspace=apps/backend db:migrate",
+    "db:seed": "npm run --workspace=apps/backend db:seed",
+    "seed:sample": "npm run --workspace=apps/backend db:seed:sample",
+    "seed:templates": "npm run --workspace=apps/backend db:seed:templates",
+    "db:studio": "npm run --workspace=apps/backend db:studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

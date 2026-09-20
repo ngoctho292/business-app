@@ -1,0 +1,826 @@
+openapi: 3.0.3
+info:
+  title: CMS kéo-thả API
+  version: 0.2.0
+  description: >
+    API cho Editor Engine, Content Editor UI và Renderer.
+    Mọi endpoint yêu cầu header Authorization: Bearer <token> trừ khi ghi chú khác.
+    Phiên bản 0.2.0 — Cập nhật sau SA Review 17/08/2026:
+    Bổ sung pagination, refresh token, DELETE/PATCH, siteId trên content-items, Error schema chuẩn, Sites_Users management, media upload per-site, X-Request-ID.
+servers:
+  - url: https://api.example.com/v1
+
+tags:
+  - name: Auth
+  - name: Sites
+  - name: Pages
+  - name: Blocks
+  - name: ContentTypes
+  - name: ContentItems
+  - name: Media
+  - name: AI
+
+paths:
+
+  # ─── AUTH ────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Đăng nhập, trả về access + refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:    { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:  { type: string, description: "JWT, TTL 15 phút" }
+                  refresh_token: { type: string, description: "Opaque token, TTL 30 ngày" }
+                  expires_in:    { type: integer, example: 900, description: "seconds" }
+                  user:          { $ref: '#/components/schemas/User' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Làm mới access token bằng refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '200':
+          description: Token mới
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  expires_in:   { type: integer }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Huỷ refresh token
+      responses:
+        '204':
+          description: Đã logout
+
+  # ─── SITES_USERS (thành viên) ─────────────────────────────────
+  /sites/{siteId}/members:
+    get:
+      tags: [Sites]
+      summary: Danh sách thành viên trong site (chỉ owner/designer)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      responses:
+        '200':
+          description: Danh sách thành viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SiteUser' }
+    post:
+      tags: [Sites]
+      summary: Mời thành viên mới vào site (chỉ owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, format: email }
+                role:  { type: string, enum: [designer, editor, viewer] }
+      responses:
+        '201':
+          description: Đã mời thành công
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SiteUser' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /sites/{siteId}/members/{userId}:
+    patch:
+      tags: [Sites]
+      summary: Đổi role thành viên (chỉ owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [designer, editor, viewer] }
+      responses:
+        '200':
+          description: Đã cập nhật
+    delete:
+      tags: [Sites]
+      summary: Xóa thành viên khỏi site (chỉ owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: Đã xóa
+
+  # ─── PAGES ───────────────────────────────────────────────────
+  /sites/{siteId}/pages:
+    get:
+      tags: [Pages]
+      summary: Danh sách trang trong 1 site
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, published] }
+      responses:
+        '200':
+          description: Danh sách page (paginated)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedPages' }
+    post:
+      tags: [Pages]
+      summary: Tạo page mới (chỉ role designer/owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug]
+              properties:
+                slug:     { type: string }
+                seo_meta: { type: object, additionalProperties: true }
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Page' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /sites/{siteId}/pages/{pageId}:
+    get:
+      tags: [Pages]
+      summary: Lấy thông tin 1 page
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Page' }
+    patch:
+      tags: [Pages]
+      summary: Cập nhật page (slug, seo_meta)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slug:     { type: string }
+                seo_meta: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Page' }
+    delete:
+      tags: [Pages]
+      summary: Xóa mềm page (chỉ owner/designer)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+      responses:
+        '204':
+          description: Đã xóa (soft delete)
+
+  /sites/{siteId}/pages/{pageId}/versions:
+    get:
+      tags: [Pages]
+      summary: Lịch sử version của 1 page
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedPageVersions' }
+    post:
+      tags: [Pages]
+      summary: Tạo version mới (autosave / submit review)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [draft, in_review] }
+                blocks:
+                  type: array
+                  items: { $ref: '#/components/schemas/Block' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PageVersion' }
+
+  /sites/{siteId}/pages/{pageId}/versions/{versionId}/approve:
+    post:
+      tags: [Pages]
+      summary: Duyệt version (chỉ owner, và không phải người đã submit)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+        - $ref: '#/components/parameters/VersionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review_notes: { type: string, description: "Ghi chú duyệt" }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PageVersion' }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /sites/{siteId}/pages/{pageId}/versions/{versionId}/publish:
+    post:
+      tags: [Pages]
+      summary: Publish version đã approved — kích hoạt Renderer revalidate
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/PageId'
+        - $ref: '#/components/parameters/VersionId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  published_url: { type: string, format: uri }
+
+  # ─── BLOCKS ──────────────────────────────────────────────────
+  /blocks/{blockId}:
+    patch:
+      tags: [Blocks]
+      summary: Cập nhật props của 1 block (granular autosave)
+      parameters:
+        - name: blockId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                props:       { type: object, additionalProperties: true }
+                order_index: { type: integer }
+                parent_id:   { type: string, format: uuid, nullable: true }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Block' }
+
+  # ─── CONTENT TYPES ───────────────────────────────────────────
+  /sites/{siteId}/content-types:
+    get:
+      tags: [ContentTypes]
+      summary: Danh sách content type đã định nghĩa
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ContentType' }
+    post:
+      tags: [ContentTypes]
+      summary: Tạo content type mới (chỉ designer/owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentTypeInput' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentType' }
+
+  /sites/{siteId}/content-types/{contentTypeId}:
+    patch:
+      tags: [ContentTypes]
+      summary: Cập nhật content type (chỉ designer/owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentTypeInput' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentType' }
+    delete:
+      tags: [ContentTypes]
+      summary: Xóa content type (chỉ owner)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+      responses:
+        '204':
+          description: Đã xóa
+
+  # ─── CONTENT ITEMS ───────────────────────────────────────────
+  /sites/{siteId}/content-types/{contentTypeId}/items:
+    get:
+      tags: [ContentItems]
+      summary: Danh sách content item (paginated)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: status
+          in: query
+          schema: { type: string, enum: [draft, published] }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedContentItems' }
+    post:
+      tags: [ContentItems]
+      summary: Tạo content item mới (editor trở lên)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields: { type: object, additionalProperties: true }
+                status: { type: string, enum: [draft, published] }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentItem' }
+
+  /sites/{siteId}/content-types/{contentTypeId}/items/{itemId}:
+    get:
+      tags: [ContentItems]
+      summary: Lấy chi tiết 1 content item
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentItem' }
+    patch:
+      tags: [ContentItems]
+      summary: Cập nhật content item
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+        - $ref: '#/components/parameters/ItemId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fields: { type: object, additionalProperties: true }
+                status: { type: string, enum: [draft, published] }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentItem' }
+    delete:
+      tags: [ContentItems]
+      summary: Xóa mềm content item
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/ContentTypeId'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '204':
+          description: Đã xóa (soft delete)
+
+  # ─── MEDIA ───────────────────────────────────────────────────
+  /sites/{siteId}/media:
+    get:
+      tags: [Media]
+      summary: Danh sách media assets của site (paginated)
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedMediaAssets' }
+    post:
+      tags: [Media]
+      summary: Khởi tạo upload — backend trả presigned PUT URL, client upload trực tiếp lên MinIO
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, mime_type, file_size]
+              properties:
+                filename:  { type: string }
+                mime_type: { type: string, example: "image/jpeg" }
+                file_size: { type: integer, description: "bytes" }
+      responses:
+        '200':
+          description: Presigned URL để client upload trực tiếp
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upload_url: { type: string, format: uri, description: "PUT trực tiếp lên MinIO" }
+                  asset_id:   { type: string, format: uuid, description: "ID để confirm sau khi upload" }
+        '413':
+          description: File vượt quota của site
+
+  /sites/{siteId}/media/{assetId}/confirm:
+    post:
+      tags: [Media]
+      summary: Xác nhận upload thành công — backend lưu bản ghi vào media_assets
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MediaAsset' }
+
+  /sites/{siteId}/media/{assetId}:
+    delete:
+      tags: [Media]
+      summary: Xóa mềm media asset
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '204':
+          description: Đã xóa (soft delete; file MinIO dọn bởi cleanup job)
+
+  # ─── AI ──────────────────────────────────────────────────────
+  /ai/suggest/seo-meta:
+    post:
+      tags: [AI]
+      summary: Gợi ý SEO meta description từ nội dung trang (dùng Gemini Flash)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [page_content]
+              properties:
+                page_content: { type: string, description: "Text content của trang, max 4000 chars" }
+                language:     { type: string, default: "vi" }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta_description: { type: string, maxLength: 160 }
+                  title_suggestion: { type: string, maxLength: 60 }
+
+  /ai/suggest/excerpt:
+    post:
+      tags: [AI]
+      summary: Gợi ý excerpt cho content item (blog, sản phẩm)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:     { type: string }
+                language: { type: string, default: "vi" }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  excerpt: { type: string, maxLength: 300 }
+
+components:
+  parameters:
+    SiteId:
+      name: siteId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PageId:
+      name: pageId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    VersionId:
+      name: versionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ContentTypeId:
+      name: contentTypeId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+    Cursor:
+      name: cursor
+      in: query
+      description: "Cursor-based pagination — giá trị từ trường `next_cursor` của response trước"
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Chưa đăng nhập hoặc token hết hạn
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Không đủ quyền
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Không tìm thấy resource
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:       { type: string, example: "RESOURCE_NOT_FOUND", description: "Machine-readable error code" }
+        message:    { type: string, example: "Page không tồn tại", description: "Human-readable message" }
+        details:    { type: object, additionalProperties: true, description: "Context bổ sung (field validation errors...)" }
+        request_id: { type: string, description: "X-Request-ID để trace log" }
+
+    Pagination:
+      type: object
+      properties:
+        next_cursor: { type: string, nullable: true, description: "null nếu hết trang" }
+        has_more:    { type: boolean }
+        total:       { type: integer, description: "Tổng số records (optional, tính riêng nếu cần)" }
+
+    User:
+      type: object
+      properties:
+        id:    { type: string, format: uuid }
+        email: { type: string }
+        name:  { type: string }
+        role:  { type: string, enum: [platform_admin, user] }
+
+    SiteUser:
+      type: object
+      properties:
+        user_id:    { type: string, format: uuid }
+        email:      { type: string }
+        name:       { type: string }
+        role:       { type: string, enum: [owner, designer, editor, viewer] }
+        created_at: { type: string, format: date-time }
+
+    Page:
+      type: object
+      properties:
+        id:                   { type: string, format: uuid }
+        site_id:              { type: string, format: uuid }
+        current_version_id:   { type: string, format: uuid, nullable: true }
+        slug:                 { type: string }
+        status:               { type: string, enum: [draft, published] }
+        seo_meta:             { type: object, additionalProperties: true }
+        created_at:           { type: string, format: date-time }
+        updated_at:           { type: string, format: date-time }
+
+    PagedPages:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Page' }
+
+    PageVersion:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        page_id:        { type: string, format: uuid }
+        version_number: { type: integer }
+        status:         { type: string, enum: [draft, in_review, approved, published] }
+        submitted_by:   { type: string, format: uuid, nullable: true }
+        approved_by:    { type: string, format: uuid, nullable: true }
+        review_notes:   { type: object, additionalProperties: true, nullable: true }
+        created_at:     { type: string, format: date-time }
+
+    PagedPageVersions:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/PageVersion' }
+
+    Block:
+      type: object
+      properties:
+        id:               { type: string, format: uuid }
+        page_version_id:  { type: string, format: uuid }
+        parent_id:        { type: string, format: uuid, nullable: true }
+        type:             { type: string, example: heading }
+        props:            { type: object, additionalProperties: true }
+        order_index:      { type: integer }
+
+    ContentTypeInput:
+      type: object
+      required: [name, field_schema]
+      properties:
+        name:             { type: string, example: Blog }
+        requires_approval: { type: boolean, default: false }
+        field_schema:
+          type: array
+          items:
+            type: object
+            properties:
+              key:      { type: string }
+              label:    { type: string }
+              type:     { type: string, enum: [text, richtext, image, number, date, reference] }
+              required: { type: boolean }
+
+    ContentType:
+      allOf:
+        - $ref: '#/components/schemas/ContentTypeInput'
+        - type: object
+          properties:
+            id:         { type: string, format: uuid }
+            site_id:    { type: string, format: uuid }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+
+    ContentItem:
+      type: object
+      properties:
+        id:               { type: string, format: uuid }
+        content_type_id:  { type: string, format: uuid }
+        site_id:          { type: string, format: uuid }
+        fields:           { type: object, additionalProperties: true }
+        status:           { type: string, enum: [draft, published] }
+        created_at:       { type: string, format: date-time }
+        updated_at:       { type: string, format: date-time }
+
+    PagedContentItems:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/ContentItem' }
+
+    MediaAsset:
+      type: object
+      properties:
+        id:         { type: string, format: uuid }
+        site_id:    { type: string, format: uuid }
+        url:        { type: string, format: uri }
+        type:       { type: string, enum: [image, video] }
+        mime_type:  { type: string }
+        file_size:  { type: integer, description: "bytes" }
+        filename:   { type: string }
+        created_at: { type: string, format: date-time }
+
+    PagedMediaAssets:
+      allOf:
+        - $ref: '#/components/schemas/Pagination'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/MediaAsset' }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+x-global-headers:
+  X-Request-ID:
+    description: "UUID de trace request qua cac service. Client nen gui, server gan neu khong co. Luon co trong response."
+    schema: { type: string, format: uuid }

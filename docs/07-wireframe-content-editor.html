@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Wireframe — Content Editor UI</title>
+<style>
+  :root{
+    --bg:#FAFAF8; --surface:#FFFFFF; --border:#E4E2DC;
+    --text:#1F1E1B; --text2:#6B6A63; --accent:#2F6F4F; --warning:#B7791F;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Inter,sans-serif;background:var(--bg);color:var(--text);}
+  .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px 16px;}
+  .sidebar .brand{font-size:14px;font-weight:500;margin-bottom:24px;}
+  .nav-item{font-size:13px;padding:9px 10px;border-radius:6px;margin-bottom:4px;color:var(--text2);}
+  .nav-item.active{background:var(--bg);color:var(--text);font-weight:500;}
+  .main{padding:28px 40px;}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .header h1{font-size:18px;font-weight:500;margin:0;}
+  .header p{font-size:13px;color:var(--text2);margin:2px 0 0;}
+  .btn{font-size:13px;padding:9px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500;}
+  td{font-size:13px;padding:14px 16px;border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;}
+  .badge.published{background:#E4EFE9;color:var(--accent);}
+  .badge.draft{background:#F4EEDD;color:var(--warning);}
+  .thumb{width:36px;height:36px;border-radius:6px;background:#EDEBE4;display:inline-block;vertical-align:middle;margin-right:10px;}
+  .overlay{position:fixed;inset:0;background:rgba(31,30,27,.35);display:flex;align-items:center;justify-content:center;}
+  .modal{width:480px;background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--border);}
+  .modal h2{font-size:16px;margin:0 0 16px;font-weight:500;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;}
+  .field .input{border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;background:var(--bg);color:var(--text2);}
+  .field .input.tall{height:90px;}
+  .upload{border:1.5px dashed var(--border);border-radius:8px;padding:20px;text-align:center;font-size:12px;color:var(--text2);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">Nhà hàng ABC</div>
+    <div class="nav-item active">Bài viết (Blog)</div>
+    <div class="nav-item">Sản phẩm</div>
+    <div class="nav-item">Media</div>
+    <div class="nav-item">Cài đặt</div>
+  </div>
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>Bài viết</h1>
+        <p>Nội dung bạn đăng ở đây sẽ tự động hiển thị trên trang Blog của website.</p>
+      </div>
+      <button class="btn">+ Viết bài mới</button>
+    </div>
+    <table>
+      <tr><th>Bài viết</th><th>Trạng thái</th><th>Cập nhật</th><th></th></tr>
+      <tr><td><span class="thumb"></span>5 món ngon nên thử tại nhà hàng</td><td><span class="badge published">Đã đăng</span></td><td>2 ngày trước</td><td>···</td></tr>
+      <tr><td><span class="thumb"></span>Khuyến mãi cuối tuần tháng 8</td><td><span class="badge draft">Bản nháp</span></td><td>Hôm nay</td><td>···</td></tr>
+      <tr><td><span class="thumb"></span>Câu chuyện thương hiệu</td><td><span class="badge published">Đã đăng</span></td><td>1 tuần trước</td><td>···</td></tr>
+    </table>
+  </div>
+</div>
+<div class="overlay">
+  <div class="modal">
+    <h2>Viết bài mới</h2>
+    <div class="field"><label>Tiêu đề</label><div class="input">Khuyến mãi cuối tuần tháng 8</div></div>
+    <div class="field"><label>Ảnh đại diện</label><div class="upload">Kéo thả ảnh vào đây hoặc bấm để chọn file</div></div>
+    <div class="field"><label>Nội dung</label><div class="input tall">Trình soạn thảo rich-text (bold, italic, chèn ảnh, link...)</div></div>
+    <div class="field"><label>Danh mục</label><div class="input">Khuyến mãi</div></div>
+    <div class="modal-actions">
+      <button class="btn ghost">Lưu nháp</button>
+      <button class="btn">Đăng bài</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

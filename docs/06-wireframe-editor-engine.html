@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Wireframe — Editor Engine</title>
+<style>
+  :root{
+    --bg:#FAFAF8; --surface:#FFFFFF; --border:#E4E2DC;
+    --text:#1F1E1B; --text2:#6B6A63; --accent:#2F6F4F; --warning:#B7791F;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Inter,sans-serif;background:var(--bg);color:var(--text);}
+  .app{display:grid;grid-template-columns:240px 1fr 300px;grid-template-rows:56px 1fr;height:100vh;}
+  .topbar{grid-column:1/4;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+  .topbar .left{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;}
+  .topbar .right{display:flex;align-items:center;gap:8px;}
+  .badge{font-size:12px;padding:3px 10px;border-radius:20px;background:#F4EEDD;color:var(--warning);font-weight:500;}
+  .btn{font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;}
+  .btn.primary{background:var(--accent);color:#fff;border:none;}
+  .device{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px;}
+  .device span{font-size:12px;padding:5px 10px;border-radius:6px;color:var(--text2);}
+  .device span.active{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06);}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px;overflow:auto;}
+  .sidebar h3{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 8px;font-weight:500;}
+  .page-item{font-size:13px;padding:8px 10px;border-radius:6px;margin-bottom:4px;color:var(--text2);}
+  .page-item.active{background:var(--bg);color:var(--text);font-weight:500;}
+  .block-lib{margin-top:24px;}
+  .block-item{font-size:13px;padding:8px 10px;border:1px dashed var(--border);border-radius:6px;margin-bottom:6px;color:var(--text2);cursor:grab;}
+  .canvas-wrap{overflow:auto;padding:32px;display:flex;justify-content:center;}
+  .canvas{width:640px;background:var(--surface);border:1px solid var(--border);border-radius:8px;min-height:600px;padding:0;}
+  .block{padding:20px 24px;border-bottom:1px dashed transparent;position:relative;}
+  .block:hover{border-color:var(--border);}
+  .block.selected{outline:2px solid var(--accent);outline-offset:-2px;}
+  .block .label{position:absolute;top:-1px;left:0;font-size:10px;background:var(--accent);color:#fff;padding:2px 6px;border-radius:0 0 4px 0;opacity:0;}
+  .block.selected .label{opacity:1;}
+  .ph-heading{height:32px;width:60%;background:#EDEBE4;border-radius:4px;}
+  .ph-text{height:12px;background:#F1EFE9;border-radius:3px;margin-top:8px;}
+  .ph-text:nth-child(2){width:90%;} .ph-text:nth-child(3){width:75%;}
+  .ph-image{height:220px;background:#EDEBE4;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:12px;}
+  .ph-button{width:140px;height:36px;background:var(--accent);border-radius:8px;margin-top:16px;}
+  .props-panel{background:var(--surface);border-left:1px solid var(--border);padding:16px;overflow:auto;}
+  .props-panel h3{font-size:13px;margin:0 0 16px;font-weight:500;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;}
+  .field .input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;background:var(--bg);color:var(--text2);}
+  .note{font-size:11px;color:var(--text2);background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:10px;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="left">🗂 Site: Nhà hàng ABC &nbsp;/&nbsp; Trang chủ</div>
+    <div class="right">
+      <div class="device"><span class="active">Desktop</span><span>Tablet</span><span>Mobile</span></div>
+      <span class="badge">Draft</span>
+      <button class="btn">Xem trước</button>
+      <button class="btn">Gửi duyệt</button>
+      <button class="btn primary">Publish</button>
+    </div>
+  </div>
+  <div class="sidebar">
+    <h3>Trang trong site</h3>
+    <div class="page-item active">Trang chủ</div>
+    <div class="page-item">Về chúng tôi</div>
+    <div class="page-item">Blog</div>
+    <div class="page-item">Liên hệ</div>
+    <div class="block-lib">
+      <h3>Thư viện block</h3>
+      <div class="block-item">Tiêu đề</div>
+      <div class="block-item">Đoạn văn bản</div>
+      <div class="block-item">Hình ảnh</div>
+      <div class="block-item">Nút bấm</div>
+      <div class="block-item">Danh sách nội dung động</div>
+      <div class="block-item">Biểu mẫu liên hệ</div>
+    </div>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas">
+      <div class="block"><span class="label">heading</span><div class="ph-heading"></div></div>
+      <div class="block selected"><span class="label">text</span><div class="ph-text"></div><div class="ph-text"></div><div class="ph-text"></div><div class="ph-button"></div></div>
+      <div class="block"><span class="label">image</span><div class="ph-image">Ảnh</div></div>
+      <div class="block"><span class="label">collection_list</span><div class="ph-heading" style="width:40%"></div><div class="ph-text" style="margin-top:14px"></div></div>
+    </div>
+  </div>
+  <div class="props-panel">
+    <h3>Thuộc tính block: text</h3>
+    <div class="field"><label>Nội dung</label><div class="input">Chào mừng bạn đến với...</div></div>
+    <div class="field"><label>Căn lề</label><div class="input">Trái</div></div>
+    <div class="field"><label>Màu chữ</label><div class="input">#1F1E1B</div></div>
+    <div class="note">Panel này render động theo block-schema-catalog.json — mỗi loại block có bộ field props riêng.</div>
+  </div>
+</div>
+</body>
+</html>
