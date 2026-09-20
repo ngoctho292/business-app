@@ -44,7 +44,7 @@ export class AbTestService {
   constructor() {
     // Seed default analytics for testing
     this.analyticsStore.set('site-1', {
-      ga4Id: 'G-VNPT888888',
+      ga4Id: 'G-XXXXXXXXXX',
       fbPixelId: '987654321012345',
       gtmId: 'GTM-TBN999',
       enableEcommerceTracking: true,

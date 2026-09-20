@@ -6,7 +6,7 @@ async function seed() {
   console.log('🌱 Bắt đầu khởi tạo dữ liệu mẫu sạch (Clean-slate Seeding)...');
 
   // 1. Tạo tài khoản Platform Admin
-  const adminEmail = 'admin@vnpt.vn';
+  const adminEmail = 'admin@tbusiness.local';
   let admin = await db.query.users.findFirst({
     where: eq(users.email, adminEmail),
   });
@@ -18,12 +18,12 @@ async function seed() {
       .values({
         email: adminEmail,
         password_hash: passwordHash,
-        name: 'VNPT Platform Admin',
+        name: 'Platform Admin',
         role: 'platform_admin',
       })
       .returning();
     admin = inserted;
-    console.log('  ✅ Đã tạo tài khoản Platform Admin: admin@vnpt.vn (Mật khẩu: admin123456)');
+    console.log('  ✅ Đã tạo tài khoản Platform Admin: admin@tbusiness.local (Mật khẩu: admin123456)');
   }
 
   // 2. Tạo tài khoản Designer mẫu

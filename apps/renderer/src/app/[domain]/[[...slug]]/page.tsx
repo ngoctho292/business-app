@@ -61,7 +61,7 @@ async function getAnalyticsSettings(siteId?: string) {
   } catch {
     // fallback
   }
-  return { ga4Id: 'G-VNPT999999', fbPixelId: '112233445566778', enableEcommerceTracking: true };
+  return { ga4Id: 'G-XXXXXXXXXX', fbPixelId: '112233445566778', enableEcommerceTracking: true };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

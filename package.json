@@ -2,7 +2,7 @@
   "name": "t-business-cms",
   "version": "0.1.0",
   "private": true,
-  "description": "Nền tảng CMS kéo-thả Multi-tenant T-Business (VNPT)",
+  "description": "Nền tảng CMS kéo-thả Multi-tenant T-Business",
   "workspaces": [
     "packages/*",
     "apps/*"

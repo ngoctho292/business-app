@@ -9,7 +9,7 @@ interface Props {
 
 export const AnalyticsModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { siteId, domain } = useCanvasStore();
-  const [ga4Id, setGa4Id] = useState('G-VNPT888888');
+  const [ga4Id, setGa4Id] = useState('G-XXXXXXXXXX');
   const [fbPixelId, setFbPixelId] = useState('987654321012345');
   const [gtmId, setGtmId] = useState('GTM-TBN999');
   const [customHeaderScript, setCustomHeaderScript] = useState('');

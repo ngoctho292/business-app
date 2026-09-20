@@ -7,7 +7,7 @@ async function seedSampleSite() {
 
   // 1. Tìm các tài khoản quản trị
   const adminUser = await db.query.users.findFirst({
-    where: eq(users.email, 'admin@vnpt.vn'),
+    where: eq(users.email, 'admin@tbusiness.local'),
   });
   const designerUser = await db.query.users.findFirst({
     where: eq(users.email, 'designer@agency.vn'),
@@ -268,7 +268,7 @@ async function seedSampleSite() {
     type: 'text',
     order_index: 2,
     props: {
-      richtext: 'Tăng tốc hiệu suất vận hành 300% với hạ tầng VNPT Cloud thế hệ mới. Tự động hóa quy trình kinh doanh, lưu trữ dữ liệu an toàn và khai phóng sức mạnh AI thông minh.',
+      richtext: 'Tăng tốc hiệu suất vận hành 300% với hạ tầng CloudNext thế hệ mới. Tự động hóa quy trình kinh doanh, lưu trữ dữ liệu an toàn và khai phóng sức mạnh AI thông minh.',
     },
     styles: {
       base: {
@@ -387,7 +387,7 @@ async function seedSampleSite() {
     type: 'text',
     order_index: 1,
     props: {
-      richtext: 'Giải pháp được tối ưu hóa toàn diện trên hạ tầng mạng băng thông rộng và trung tâm dữ liệu đạt chuẩn Tier III của VNPT.',
+      richtext: 'Giải pháp được tối ưu hóa toàn diện trên hạ tầng mạng băng thông rộng và trung tâm dữ liệu đạt chuẩn Tier III.',
     },
     styles: {
       base: {
@@ -1460,7 +1460,7 @@ async function seedSampleSite() {
         { platform: 'phone', url: 'tel:18001260' },
         { platform: 'email', url: 'mailto:hotro@cloudnext.vn' },
       ],
-      copyright: '© 2026 CloudNext Technologies — Hệ sinh thái số VNPT. Tất cả quyền được bảo lưu.',
+      copyright: '© 2026 CloudNext Technologies — Hệ sinh thái số CloudNext. Tất cả quyền được bảo lưu.',
     },
     styles: {
       base: {

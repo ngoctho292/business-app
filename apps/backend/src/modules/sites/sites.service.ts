@@ -187,7 +187,7 @@ export class SitesService {
       if (!isDnsValid) {
         try {
           const cnames = await dns.resolveCname(customDomain);
-          if (cnames.some((c) => c.includes('tbusiness') || c.includes('localhost') || c.includes('vercel') || c.includes('vnpt'))) {
+          if (cnames.some((c) => c.includes('tbusiness') || c.includes('localhost') || c.includes('vercel'))) {
             isDnsValid = true;
             verificationDetail = 'Bản ghi CNAME đã trỏ về máy chủ T-Business thành công';
           }

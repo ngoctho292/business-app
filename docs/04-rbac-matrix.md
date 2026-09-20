@@ -7,7 +7,7 @@
 
 | Role | Mo ta | Scope |
 |---|---|---|
-| `platform_admin` | Nhan vien VNPT support / billing — co the xem va can thiep toan bo site | Toan he thong |
+| `platform_admin` | Nhan vien support / billing — co the xem va can thiep toan bo site | Toan he thong |
 | `user` | Nguoi dung thuong — quyen duoc xac dinh boi `sites_users.role` theo tung site | Per-site |
 
 > **Luu y:** `platform_admin` la role cap he thong, luu trong `users.role`. Ho **khong co** entry trong `sites_users` — khong the duoc nham voi owner/designer.

@@ -7,7 +7,7 @@ Tài liệu này chi tiết hóa các bước khởi tạo cấu trúc Monorepo,
 ## 1. Kiến trúc Tổng thể & Cấu trúc Thư mục
 
 ```
-c:\VNPT\t-business\
+c:\workspace\t-business\
 ├── docs\                         # 11 tài liệu kiến trúc v0.2 đã hoàn thiện
 ├── docker-compose.yml            # Môi trường chạy local (Postgres, Redis, MinIO, Nginx)
 ├── nginx\

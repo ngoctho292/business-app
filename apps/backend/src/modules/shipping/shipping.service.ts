@@ -133,7 +133,7 @@ export class ShippingService {
    * Tạo đơn vận chuyển sang GHN / GHTK và sinh mã vận đơn
    */
   async createShippingOrder(dto: CreateShippingOrderDto): Promise<ShippingOrderResult> {
-    const carrierPrefix = dto.carrier === 'GHN' ? 'GHN_VNPT_' : 'GHTK_VNPT_';
+    const carrierPrefix = dto.carrier === 'GHN' ? 'GHN_TBUSINESS_' : 'GHTK_TBUSINESS_';
     const trackingCode = `${carrierPrefix}${Date.now()}`;
     const totalFee = dto.carrier === 'GHN' ? 35000 : 32000;
 

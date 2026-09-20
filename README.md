@@ -1,4 +1,4 @@
-# T-Business CMS — Nền tảng CMS Kéo-thả Multi-tenant (VNPT)
+# T-Business CMS — Nền tảng CMS Kéo-thả Multi-tenant
 
 Nền tảng thiết kế và quản trị website kéo-thả hiện đại dành cho doanh nghiệp và agency, xây dựng theo kiến trúc **Next.js 14 Multi-tenant Renderer + NestJS 10 API + Drizzle PostgreSQL**.
 
@@ -7,7 +7,7 @@ Nền tảng thiết kế và quản trị website kéo-thả hiện đại dàn
 ## 📦 Cấu trúc Dự án (Monorepo)
 
 ```
-c:\VNPT\t-business\
+c:\workspace\t-business\
 ├── docs\                         # 11 tài liệu kiến trúc v0.2 đã hoàn thiện
 ├── docker-compose.yml            # Docker: Postgres 15, Redis 7, MinIO, Nginx
 ├── nginx\nginx.conf              # Reverse proxy định tuyến /v1/ API và CDN media
@@ -72,7 +72,7 @@ Sau khi chạy `npm run db:seed`, bạn có thể đăng nhập vào Editor (`ht
 
 | Vai trò (Role) | Email đăng nhập | Mật khẩu mặc định | Quyền hạn |
 |---|---|---|---|
-| **Platform Admin** | `admin@vnpt.vn` | `admin123456` | Toàn quyền hệ thống, can thiệp mọi site |
+| **Platform Admin** | `admin@tbusiness.local` | `admin123456` | Toàn quyền hệ thống, can thiệp mọi site |
 | **Designer (Agency)** | `designer@agency.vn` | `designer123` | Dựng layout blocks, tạo content types, submit review |
 | **Editor (Khách hàng)** | `khachhang@nhahangabc.vn` | `khachhang123` | Nhập bài viết/sản phẩm theo content types có sẵn |
 
